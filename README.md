@@ -7,7 +7,7 @@ the clock.
 A [Quill](https://github.com/Cloudmorrow/cloudmorrow/blob/main/docs/QUILLS.md)
 for Cloudmorrow: install it from the Quill Catalog, or from this repository
 with `cm quill add --source https://github.com/Cloudmorrow/quill-chess --ref v1.0.0`.
-It needs a Cloudmorrow server with the chess kit (the release after v0.108.0).
+It needs a Cloudmorrow server with the chess kit: v0.109.0 or later.
 
 <p>
 <img src="screenshots/chess-desktop.webp" width="560" alt="Chess in a browser: the games down the left, the open game's board in the middle with Morrow and his clock above it and you and yours below, the moves and the buttons beside it">
