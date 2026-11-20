@@ -6,7 +6,7 @@
 [quill]
 id = "chess"
 name = "Chess"
-version = "1.0.0"
+version = "1.1.0"
 summary = "Chess against the people on your cloud, or against Morrow, who gets better each time you beat him — with no limit, 10 minutes or 5 minutes on the clock."
 category = "games"
 icon = "chess"
@@ -19,7 +19,10 @@ features = [
   "No limit, 10 minutes or 5 minutes each, with a chess clock that runs on every screen the game is open on",
   "A flat green board seen from above, the pieces moved by a tap or a drag, the moves you may make shown as dots",
   "Every move checked by the rules before it is kept: castling, in passing, promotion, check, mate, stalemate, repetition and the fifty-move rule",
-  "Resign, offer a draw, and a rematch with the colours swapped",
+  "Who has white is decided for you: the colours take turns from one game to the next, whoever starts it",
+  "Resign, offer a draw, and a rematch",
+  "Morrow takes his time over a move, as a person would, his clock running while he thinks",
+  "The sound of the pieces: a tap for a move, a knock for a capture, a bell with check",
   "In the terminal and on the command line too: `cm chess move <game> Nf3`",
 ]
 
@@ -39,7 +42,9 @@ play = "play"                     # a move, a resignation, a draw offered or tak
 start = "start"                   # a new game: whom against, how long, which colour
 computers = "chess.computer"      # Morrow, at his level against you
 
-# A new game. The kit's own sheet asks the three things and presses it.
+# A new game. The kit's own sheet asks whom against and how long, and
+# presses it. Who has white is the game's to say: the other colour from the
+# last game at the same table, so the two players take turns.
 [[actions]]
 id = "start"
 label = "New game"
@@ -47,11 +52,10 @@ tone = "primary"
 bar = false
 timeout = "1m"
 busy = "Setting up the board"
-description = "Starts a game against a person on this cloud or against Morrow."
+description = "Starts a game against a person on this cloud or against Morrow; the colours take turns from one game to the next."
 [actions.fields]
 opponent = { kind = "string", required = true, label = "Against", suggest = "people" }
 clock = { kind = "enum", values = ["0", "600", "300"], labels = ["No limit", "10 minutes", "5 minutes"], default = "600", label = "Time" }
-colour = { kind = "enum", values = ["random", "white", "black"], labels = ["Either", "White", "Black"], default = "random", label = "You play" }
 
 # A move in a game, as e2e4 or Nf3 — or resign, draw (offer one, or take
 # the one offered), decline, or time (the other side's flag has fallen).
