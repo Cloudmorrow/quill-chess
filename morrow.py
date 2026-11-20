@@ -271,3 +271,27 @@ def choose(game: Game, level: int, rng: random.Random | None = None) -> Move:
     felt = {m: s + (rng.randint(-lv.noise, lv.noise) if lv.noise else 0) for m, s in scores.items()}
     top = max(felt.values())
     return rng.choice([m for m, s in felt.items() if s == top])
+
+
+# How long he takes over a move, in milliseconds: from, to — longer at the low
+# levels, where a person expects to see him puzzle it out; a little shorter
+# at the top, where the looking itself takes a while.
+PAUSES = {1: (3_000, 6_500), 2: (3_000, 6_000), 3: (2_800, 5_500), 4: (2_600, 5_000), 5: (2_500, 4_800),
+          6: (2_400, 4_500), 7: (2_200, 4_200), 8: (2_000, 4_000), 9: (2_000, 3_800), 10: (2_000, 3_600)}
+
+
+def pause(level: int, played: int, clock: int = 0, left: int | None = None, rng: random.Random | None = None) -> int:
+    """How long Morrow takes over his next move, in milliseconds.
+
+    The opening moves come quicker, a five-minute game is quicker throughout,
+    and he never spends more than a twentieth of what is left on his clock."""
+    rng = rng or random.Random()
+    low, high = PAUSES[max(1, min(TOP, int(level)))]
+    wait = rng.randint(low, high)
+    if played < 4:
+        wait = wait * 6 // 10
+    if clock and clock <= 300:
+        wait = wait * 6 // 10
+    if left is not None:
+        wait = min(wait, max(300, left // 20))
+    return wait

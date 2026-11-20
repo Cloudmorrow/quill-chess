@@ -19,7 +19,7 @@ import random
 
 import morrow
 from cloudmorrow.quill import Conflict, action, error, go, toast
-from cloudmorrow.quill.chess import BLACK_WINS, DRAWN, WHITE_WINS, Game, lost_on_time, time_left
+from cloudmorrow.quill.chess import BLACK_WINS, DRAWN, WHITE_WINS, Game, lost_on_time, thinking, time_left
 
 TABLE = "chess.table"
 GAME = "chess.game"
@@ -66,7 +66,7 @@ def _table_with(ctx, other: str | None):
 
 
 @action("start")
-def start(ctx, opponent, clock="600", colour="random"):
+def start(ctx, opponent, clock="600"):
     me = ctx.user.username
     opponent = str(opponent).strip()
     seconds = CLOCKS.get(str(clock), 600)
@@ -81,12 +81,12 @@ def start(ctx, opponent, clock="600", colour="random"):
             return error("Pick somebody else to play, or Morrow")
         if opponent not in ctx.people():
             return error(f"There is nobody called {opponent} on this cloud")
-    if colour not in ("white", "black"):
-        colour = random.choice(("white", "black"))
+    table = _table_with(ctx, None if computer else opponent)
+    colour = _colour_next(ctx, table, me, computer)
     them = computer["name"] if computer else opponent
     white, black = (me, them) if colour == "white" else (them, me)
     fields = {
-        "table": _table_with(ctx, None if computer else opponent).id,
+        "table": table.id,
         "name": f"{white} – {black}",
         "white": white,
         "black": black,
@@ -101,6 +101,19 @@ def start(ctx, opponent, clock="600", colour="random"):
         # Morrow has white: he opens.
         _answer(ctx, game, Game(), dict(fields))
     return go("games", game=game.id)
+
+
+def _colour_next(ctx, table, me: str, computer) -> str:
+    """The colour the person has this time: the other one from the last game at
+    this table — the same table from either side, so the two of them agree — and
+    a toss of a coin for the first."""
+    games = [g for g in ctx.records.list(GAME, table=table.id) if not computer or g.get("computer")]
+    if not games:
+        return random.choice(("white", "black"))
+    # The newest; two made in one second are told apart by the order the store keeps them in.
+    last = max(enumerate(games), key=lambda pair: (str(pair[1].created_at or ""), pair[0]))[1]
+    was_white = last.get("white") == me and last.get("computer") != "white"
+    return "black" if was_white else "white"
 
 
 def _side_of(fields: dict, who: str) -> str:
@@ -167,19 +180,29 @@ def _after_move(fields: dict, board: Game, now: dt.datetime) -> None:
 
 
 def _answer(ctx, game, board: Game, fields: dict) -> str:
-    """Morrow's move, played and kept. What to say about the game, if it ended."""
+    """Morrow's move, played and kept. What to say about the game, if it ended.
+
+    He works it out at once, but takes his time over it as a person would
+    (`morrow.pause`): the move is kept back until `answer_at`, every screen
+    shows him thinking with his clock running until then, and the time comes
+    off his clock as yours does."""
     started = _now(ctx)
-    choice = morrow.choose(board, int(fields.get("level") or 1))
+    level = int(fields.get("level") or 1)
+    choice = morrow.choose(board, level)
     side = board.turn
-    now = _now(ctx)
-    # His thinking comes off his clock as yours does.
-    if fields.get("clock") and fields.get("turn_at"):
-        key = "white_left" if side == "w" else "black_left"
-        fields[key] = max(1, int(fields[key]) - int((now - started).total_seconds() * 1000))
+    key = "white_left" if side == "w" else "black_left"
+    left = int(fields[key]) if fields.get("clock") and fields.get(key) is not None else None
+    pause = morrow.pause(level, len(board.moves), int(fields.get("clock") or 0), left)
+    worked = int((_now(ctx) - started).total_seconds() * 1000)
+    spent = max(pause, worked)
+    answer = started + dt.timedelta(milliseconds=spent)
+    if left is not None and fields.get("turn_at"):
+        fields[key] = max(1, left - spent)
     board.play(choice)
-    _after_move(fields, board, now)
+    _after_move(fields, board, answer)
     ended = board.outcome()
     said = _finish(ctx, game, fields, *ended) if ended else ""
+    fields["answer_at"] = _stamp(answer)
     _save(ctx, game, fields)
     return said
 
@@ -231,6 +254,8 @@ def play(ctx, game, move):
             said = _finish(ctx, game, fields, *lost_on_time(loser, board.position))
             _save(ctx, game, fields)
             return toast(said or "Time")
+        if thinking(fields, now):
+            return error(f"{other} is still thinking")
         if board.turn != side:
             return error(f"It is {other}'s move")
         try:

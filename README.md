@@ -7,7 +7,7 @@ the clock.
 A [Quill](https://github.com/Cloudmorrow/cloudmorrow/blob/main/docs/QUILLS.md)
 for Cloudmorrow: install it from the Quill Catalog, or from this repository
 with `cm quill add --source https://github.com/Cloudmorrow/quill-chess --ref v1.0.0`.
-It needs a Cloudmorrow server with the chess kit: v0.109.0 or later.
+It needs a Cloudmorrow server with the chess kit: v0.110.0 or later (v0.109.0 plays it, without Morrow taking his time).
 
 <p>
 <img src="screenshots/chess-desktop.webp" width="560" alt="Chess in a browser: the games down the left, the open game's board in the middle with Morrow and his clock above it and you and yours below, the moves and the buttons beside it">
@@ -18,29 +18,40 @@ It needs a Cloudmorrow server with the chess kit: v0.109.0 or later.
 (A throwaway cloud made for the pictures, named after nobody real.)
 
 - **Play anybody on your cloud.** The pen is a new game: pick who — any
-  person on the server, or Morrow — how long, and which colour. A game
-  against a person is on their list at once, with a push to tell them.
+  person on the server, or Morrow — and how long. A game against a person
+  is on their list at once, with a push to tell them.
+- **The colours take turns.** Nobody picks white: the first game between
+  two people is a toss of a coin, and each one after has the colours the
+  other way round from the last — whoever of the two starts it. Against
+  Morrow the same.
 - **Or play Morrow.** He starts at level 1, where he looks one move ahead
   and leaves pieces hanging, and goes up a level each time you beat him,
   to level 10, where he looks five moves ahead and gives nothing away.
   Losing or drawing leaves him where he is. Every person has their own
-  Morrow, at their own level.
+  Morrow, at their own level. He takes his time over a move as a person
+  would — a few seconds, longer at the low levels, quicker in the opening
+  and in a five-minute game — with his clock running while he thinks.
 - **A chess clock.** No limit, 10 minutes or 5 minutes each. The clocks
   start once both sides have moved, run on every screen the game is open
   on, and the side whose time runs out loses — unless the other has
   nothing left to mate with, when it is a draw.
 - **A board you know.** Flat, green and cream, seen from above, white at
   the bottom unless you play black. Press a piece and where it may go is
-  dotted; press there, or drag it. The last move is lit, a king in check
-  glows, a pawn at the end asks what it becomes, and what each side has
-  taken is drawn beside its name.
+  dotted; press there, or drag it — put back where it stood, nothing
+  happens. The last move is lit, a king in check glows, a pawn at the end
+  asks what it becomes, and what each side has taken is drawn beside its
+  name.
+- **The sound of it.** A wooden tap for a move, a knock for a capture, a
+  bell with check, a chime at the end; the speaker beside the moves
+  switches it off.
 - **The rules, all of them.** Every move is checked before it is kept:
   castling, taking in passing, promotion, check and mate, stalemate, a
   position three times over, the fifty-move rule, and too little left to
   mate with.
 - **Resign, a draw, a rematch.** Offer a draw and the other side can take
   it or turn it down; Morrow takes one only when he stands worse. Once it
-  is over, Rematch plays the same person again with the colours swapped.
+  is over, Rematch plays the same person again, the colours taking their
+  turn.
 
 ## Using it
 
@@ -65,7 +76,7 @@ and Enter. `n` starts a new game, `d` offers or takes a draw, `r` resigns.
 
 ```
 cm chess list                         # your games, and where each stands
-cm chess new Morrow --clock 10m --colour white
+cm chess new Morrow --clock 10m
 cm chess new sara --clock 5m          # a person, by their username
 cm chess show <game>                  # the board, the clocks, the moves
 cm chess move <game> Nf3              # or g1f3
@@ -88,7 +99,8 @@ every screen by the core's chess kit.
 Every move goes through the Quill's code, which checks it by the rules
 (the core's `cloudmorrow.quill.chess`), takes the time spent off the
 mover's clock, notices the end of the game, and, against Morrow, has him
-answer. **Morrow** (`morrow.py`) looks ahead with alpha-beta search,
+answer — kept back until `answer_at`, the few seconds he takes over it,
+so every screen shows him thinking meanwhile. **Morrow** (`morrow.py`) looks ahead with alpha-beta search,
 follows captures to the end, and weighs what he sees by the pieces and
 where they stand; his level sets how far he looks and how loosely he
 plays. He runs in the sandbox, so how long he thinks is counted in

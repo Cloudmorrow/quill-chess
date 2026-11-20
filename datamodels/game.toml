@@ -5,7 +5,7 @@
 # play in it, so it is nobody's alone; a new game tells the other player.
 [datamodel]
 id = "chess.game"
-version = 1
+version = 2
 label = "Game"
 description = "A game of chess between two people, or a person and Morrow."
 scopes = ["personal", "shared"]
@@ -30,6 +30,8 @@ white_left = { kind = "int" }
 black_left = { kind = "int" }
 # Since when the side to move has been thinking: empty until both have moved, and once it is over.
 turn_at = { kind = "datetime" }
+# When Morrow's last move is to be seen: he works it out at once, and takes his time over it.
+answer_at = { kind = "datetime" }
 # 1-0, 0-1 or 1/2-1/2 once it is over, and why.
 result = { kind = "string", indexed = true }
 reason = { kind = "string" }
