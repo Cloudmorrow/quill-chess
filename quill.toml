@@ -1,0 +1,79 @@
+# Chess: games against the people on your cloud, or against Morrow, with a
+# chess clock or without. The board is the core's chess kit; this Quill's
+# code checks every move before it is kept, keeps the clock, and plays
+# Morrow (morrow.py), who goes up a level each time you beat him.
+
+[quill]
+id = "chess"
+name = "Chess"
+version = "1.0.0"
+summary = "Chess against the people on your cloud, or against Morrow, who gets better each time you beat him — with no limit, 10 minutes or 5 minutes on the clock."
+category = "games"
+icon = "chess"
+publisher = "Cloudmorrow"
+license = "AGPL-3.0-or-later"
+code = "quill.py"
+features = [
+  "Play anybody on your cloud: pick them, pick the time, and the game is on their list with a push to tell them",
+  "Or play Morrow, who starts at level 1 and goes up a level each time you beat him, to level 10",
+  "No limit, 10 minutes or 5 minutes each, with a chess clock that runs on every screen the game is open on",
+  "A flat green board seen from above, the pieces moved by a tap or a drag, the moves you may make shown as dots",
+  "Every move checked by the rules before it is kept: castling, in passing, promotion, check, mate, stalemate, repetition and the fifty-move rule",
+  "Resign, offer a draw, and a rematch with the colours swapped",
+  "In the terminal and on the command line too: `cm chess move <game> Nf3`",
+]
+
+[uses]
+datamodels = []
+
+# One tab: the games down the left, the board of the open one beside them,
+# the clocks and the moves next to it. A new game is the pen.
+[[screens]]
+id = "games"
+kit = "chess"
+label = "Chess"
+icon = "chess"
+model = "chess.game"
+title = "name"
+play = "play"                     # a move, a resignation, a draw offered or taken
+start = "start"                   # a new game: whom against, how long, which colour
+computers = "chess.computer"      # Morrow, at his level against you
+
+# A new game. The kit's own sheet asks the three things and presses it.
+[[actions]]
+id = "start"
+label = "New game"
+tone = "primary"
+bar = false
+timeout = "1m"
+busy = "Setting up the board"
+description = "Starts a game against a person on this cloud or against Morrow."
+[actions.fields]
+opponent = { kind = "string", required = true, label = "Against", suggest = "people" }
+clock = { kind = "enum", values = ["0", "600", "300"], labels = ["No limit", "10 minutes", "5 minutes"], default = "600", label = "Time" }
+colour = { kind = "enum", values = ["random", "white", "black"], labels = ["Either", "White", "Black"], default = "random", label = "You play" }
+
+# A move in a game, as e2e4 or Nf3 — or resign, draw (offer one, or take
+# the one offered), decline, or time (the other side's flag has fallen).
+[[actions]]
+id = "play"
+label = "Play"
+on = "chess.game"
+bar = false
+timeout = "1m"
+description = "Plays a move (e2e4 or Nf3), or resign, draw, decline, or time when the other side's clock has run out."
+[actions.fields]
+move = { kind = "string", required = true }
+
+# Morrow, for everybody who opens Chess: level 1 to start.
+[[datasets]]
+id = "morrow"
+model = "chess.computer"
+seed = "per-owner"
+records = [{ name = "Morrow", level = 1 }]
+
+# screenshots/: taken from a throwaway cloud named after nobody real, never
+# anybody's own. The catalog's page shows them.
+[[screenshots]]
+id = "chess"
+caption = "The games down the left, the open one's board in the middle, the clocks and the moves beside it"
