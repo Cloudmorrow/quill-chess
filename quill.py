@@ -19,7 +19,14 @@ import random
 
 import morrow
 from cloudmorrow.quill import Conflict, action, error, go, toast
-from cloudmorrow.quill.chess import BLACK_WINS, DRAWN, WHITE_WINS, Game, lost_on_time, thinking, time_left
+from cloudmorrow.quill.chess import BLACK_WINS, DRAWN, WHITE_WINS, Game, lost_on_time, time_left
+
+try:
+    from cloudmorrow.quill.chess import thinking
+except ImportError:  # a server before v0.110.0: nothing is kept back there, so nothing waits
+
+    def thinking(fields, now=None):
+        return 0
 
 TABLE = "chess.table"
 GAME = "chess.game"
